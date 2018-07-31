@@ -1,0 +1,40 @@
+[package]
+name = "tcp_typed"
+version = "0.1.0"
+license = "Apache-2.0"
+authors = ["Alec Mocatta <alec@mocatta.net>"]
+categories = ["development-tools","network-programming"]
+keywords = ["tcp","socket"]
+description = """
+A wrapper around platform TCP socket APIs that leverages the type system to ensure correct usage.
+
+It's quite easy to accidentally misuse the Berkeley sockets or similar APIs, resulting in ECONNRESET/EPIPE/etc, data being lost on close, and potential hangs from non-exhaustive collection of edge-triggered events.
+
+This library aims to make it impossible to misuse in non-unsafe code.
+"""
+repository = "https://github.com/alecmocatta/tcp_typed"
+homepage = "https://github.com/alecmocatta/tcp_typed"
+documentation = "https://docs.rs/tcp_typed/0.1.0"
+readme = "README.md"
+
+[badges]
+#appveyor = { repository = "alecmocatta/tcp_typed" }
+circle-ci = { repository = "alecmocatta/tcp_typed" }
+#gitlab = { repository = "alecmocatta/tcp_typed" }
+travis-ci = { repository = "alecmocatta/tcp_typed" }
+
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+palaver = {git = "https://github.com/alecmocatta/palaver"}
+itertools = "0.7"
+log = "0.4"
+
+[target.'cfg(unix)'.dependencies]
+nix = "0.11"
+
+[replace]
+"libc:0.2.42" = {git = "https://github.com/rust-lang/libc"}
+
+[target.'cfg(windows)'.dependencies]
+winapi = "0.3"
