@@ -26,15 +26,12 @@ travis-ci = { repository = "alecmocatta/tcp_typed" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-palaver = {git = "https://github.com/alecmocatta/palaver"}
+palaver = "0.1"
 itertools = "0.7"
 log = "0.4"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.11"
-
-[replace]
-"libc:0.2.42" = {git = "https://github.com/rust-lang/libc"}
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3"

@@ -5,7 +5,7 @@
 [![Build Status](https://circleci.com/gh/alecmocatta/tcp_typed/tree/master.svg?style=shield)](https://circleci.com/gh/alecmocatta/tcp_typed)
 [![Build Status](https://travis-ci.com/alecmocatta/tcp_typed.svg?branch=master)](https://travis-ci.com/alecmocatta/tcp_typed)
 
-[Docs](https://docs.rs/crate/tcp_typed/0.1.0)
+[Docs](https://docs.rs/tcp_typed/0.1.0)
 
 A wrapper around platform TCP socket APIs that leverages the type system to ensure correct usage.
 
