@@ -26,9 +26,9 @@ travis-ci = { repository = "alecmocatta/tcp_typed" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-palaver = "0.1"
 itertools = "0.7"
 log = "0.4"
+palaver = { version = "0.1" } #, path = "../palaver" }
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.11"

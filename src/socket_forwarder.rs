@@ -1,6 +1,6 @@
 use super::*;
 #[cfg(unix)]
-use nix::{sys::socket, sys::uio};
+use nix::{sys::socket, sys::uio, unistd};
 use std::os;
 #[cfg(unix)]
 use std::os::unix::io::IntoRawFd;
@@ -17,12 +17,16 @@ pub fn socket_forwarder() -> (SocketForwarder, SocketForwardee) {
 	)
 }
 impl SocketForwarder {
-	pub fn send(&self, fd: Fd) -> Result<(), nix::Error> {
+	pub fn send(&self, fd: Fd, copy: bool) -> Result<(), nix::Error> {
 		let iov = [uio::IoVec::from_slice(&[])];
 		let fds = [fd];
 		let cmsg = [socket::ControlMessage::ScmRights(&fds)];
-		socket::sendmsg(self.0, &iov, &cmsg, socket::MsgFlags::empty(), None)
-			.map(|x| assert_eq!(x, 0))
+		socket::sendmsg(self.0, &iov, &cmsg, socket::MsgFlags::empty(), None).map(|x| {
+			assert_eq!(x, 0);
+			if !copy {
+				unistd::close(fd).unwrap();
+			}
+		})
 	}
 }
 impl SocketForwardee {
@@ -35,7 +39,8 @@ impl SocketForwardee {
 			&iovec,
 			Some(&mut space),
 			socket::MsgFlags::MSG_DONTWAIT,
-		).map(|msg| {
+		)
+		.map(|msg| {
 			let mut iter = msg.cmsgs();
 			match (iter.next(), iter.next()) {
 				(Some(socket::ControlMessage::ScmRights(fds)), None) => {

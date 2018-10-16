@@ -24,18 +24,15 @@
 	unused_import_braces,
 	unused_qualifications,
 	unused_results,
+	clippy::pedantic,
 )] // from https://github.com/rust-unofficial/patterns/blob/master/anti_patterns/deny-warnings.md
-#![cfg_attr(feature = "cargo-clippy", warn(clippy_pedantic))]
-#![cfg_attr(
-	feature = "cargo-clippy",
-	allow(
-		inline_always,
-		doc_markdown,
-		if_not_else,
-		indexing_slicing,
-		new_ret_no_self,
-		needless_pass_by_value
-	)
+#![allow(
+	clippy::inline_always,
+	clippy::doc_markdown,
+	clippy::if_not_else,
+	clippy::indexing_slicing,
+	clippy::new_ret_no_self,
+	clippy::needless_pass_by_value
 )]
 
 extern crate itertools;
