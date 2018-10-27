@@ -5,7 +5,7 @@
 [![Build Status](https://circleci.com/gh/alecmocatta/tcp_typed/tree/master.svg?style=shield)](https://circleci.com/gh/alecmocatta/tcp_typed)
 [![Build Status](https://travis-ci.com/alecmocatta/tcp_typed.svg?branch=master)](https://travis-ci.com/alecmocatta/tcp_typed)
 
-[Docs](https://docs.rs/tcp_typed/0.1.0)
+[Docs](https://docs.rs/tcp_typed/0.1.1)
 
 A wrapper around platform TCP socket APIs that leverages the type system to ensure correct usage.
 
@@ -15,7 +15,7 @@ This library aims to make it impossible to misuse in non-unsafe code.
 
 If you ever see a connection reset / ECONNRESET, EPIPE, data being lost on close, or panic, then it is a bug in this library! Please file an issue with as much info as possible.
 
-It's designed to be used in conjunction with an implementer of the [`Notifier`](https://docs.rs/tcp_typed/0.1.0/tcp_typed/trait.Notifier.html) trait – for example [`notifier`](https://github.com/alecmocatta/notifier). As long as the [`Notifier`](https://docs.rs/tcp_typed/0.1.0/tcp_typed/trait.Notifier.html) contract is fulfilled, then this library will collect all relevent events (connected, data in, data available to be written, remote closed, bytes acked, connection errors) upon each edge-triggered notification.
+It's designed to be used in conjunction with an implementer of the [`Notifier`](https://docs.rs/tcp_typed/0.1.1/tcp_typed/trait.Notifier.html) trait – for example [`notifier`](https://github.com/alecmocatta/notifier). As long as the [`Notifier`](https://docs.rs/tcp_typed/0.1.1/tcp_typed/trait.Notifier.html) contract is fulfilled, then this library will collect all relevent events (connected, data in, data available to be written, remote closed, bytes acked, connection errors) upon each edge-triggered notification.
 
 ## Note
 

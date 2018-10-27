@@ -14,7 +14,7 @@
 //!
 //! Currently doesn't support Windows.
 
-#![doc(html_root_url = "https://docs.rs/tcp_typed/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/tcp_typed/0.1.1")]
 #![warn(
 	// missing_copy_implementations,
 	// missing_debug_implementations,
