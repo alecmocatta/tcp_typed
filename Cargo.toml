@@ -28,7 +28,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 itertools = "0.8"
 log = "0.4"
-palaver = { version = "0.1" } #, path = "../palaver" }
+palaver = { version = "0.2" } #, path = "../palaver" }
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.11"
