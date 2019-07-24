@@ -118,7 +118,7 @@ impl CircularBuffer<u8> {
 				let b_start = 0;
 				let b_end = self.write_available() - (a_end - a_start);
 				let (b, a) = self.buf.split_at_mut(b_end);
-				match nix::sys::socket::recvmsg::<()>(
+				match nix::sys::socket::recvmsg(
 					fd,
 					&[
 						nix::sys::uio::IoVec::from_mut_slice(
@@ -140,7 +140,7 @@ impl CircularBuffer<u8> {
 					Err(err) => return Err(err),
 				}
 			} else {
-				match nix::sys::socket::recvmsg::<()>(
+				match nix::sys::socket::recvmsg(
 					fd,
 					&[nix::sys::uio::IoVec::from_mut_slice(&mut [0])],
 					None,

@@ -19,8 +19,8 @@
 	// missing_copy_implementations,
 	// missing_debug_implementations,
 	// missing_docs,
+	trivial_casts,
 	trivial_numeric_casts,
-	unused_extern_crates,
 	unused_import_braces,
 	unused_qualifications,
 	unused_results,
@@ -34,15 +34,6 @@
 	clippy::new_ret_no_self,
 	clippy::needless_pass_by_value
 )]
-
-extern crate itertools;
-#[cfg(unix)]
-extern crate nix;
-extern crate palaver;
-#[cfg(windows)]
-extern crate winapi;
-#[macro_use]
-extern crate log;
 
 mod circular_buffer;
 mod connection;
