@@ -23,7 +23,7 @@ azure-devops = { project = "alecmocatta/tcp_typed", pipeline = "tests" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-itertools = "0.7"
+itertools = "0.8"
 log = "0.4"
 palaver = "0.1"
 
