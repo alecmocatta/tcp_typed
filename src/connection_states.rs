@@ -1,5 +1,6 @@
 use super::*;
 use circular_buffer::CircularBuffer;
+use log::trace;
 #[cfg(unix)]
 use nix::{errno, fcntl, libc, sys::socket, unistd};
 use std::{mem, net, time};
@@ -89,8 +90,7 @@ impl Listener {
 								unistd::close(self.fd).unwrap();
 								assert!(
 									fcntl::fcntl(fd, fcntl::FcntlArg::F_GETFL).unwrap()
-										& fcntl::OFlag::O_NONBLOCK.bits()
-										!= 0
+										& fcntl::OFlag::O_NONBLOCK.bits() != 0
 								);
 								executor.add_fd(fd);
 								self.fd = fd;
