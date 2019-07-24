@@ -1,6 +1,6 @@
 use super::*;
 #[cfg(unix)]
-use nix::{sys::socket, sys::uio, unistd};
+use nix::{cmsg_space, sys::socket, sys::uio, unistd};
 use std::os;
 #[cfg(unix)]
 use std::os::unix::io::IntoRawFd;
@@ -33,7 +33,7 @@ impl SocketForwardee {
 	pub fn recv(&self) -> Result<Fd, nix::Error> {
 		let mut buf = [0; 8];
 		let iovec = [uio::IoVec::from_mut_slice(&mut buf)];
-		let mut space = socket::CmsgSpace::<[Fd; 2]>::new();
+		let mut space = cmsg_space!([Fd; 2]);
 		socket::recvmsg(
 			self.0,
 			&iovec,
@@ -43,7 +43,7 @@ impl SocketForwardee {
 		.map(|msg| {
 			let mut iter = msg.cmsgs();
 			match (iter.next(), iter.next()) {
-				(Some(socket::ControlMessage::ScmRights(fds)), None) => {
+				(Some(socket::ControlMessageOwned::ScmRights(fds)), None) => {
 					assert_eq!(msg.bytes, 0);
 					assert_eq!(fds.len(), 1);
 					fds[0]

@@ -12,10 +12,10 @@ pub struct Listener {
 }
 impl Listener {
 	pub fn new_ephemeral(host: &net::IpAddr, executor: &impl Notifier) -> (Self, u16) {
-		let process_listener = palaver::socket(
+		let process_listener = palaver::socket::socket(
 			socket::AddressFamily::Inet,
 			socket::SockType::Stream,
-			palaver::SockFlag::SOCK_NONBLOCK,
+			palaver::socket::SockFlag::SOCK_NONBLOCK,
 			socket::SockProtocol::Tcp,
 		)
 		.unwrap();
@@ -71,15 +71,17 @@ impl Listener {
 		itertools::unfold((), move |_| {
 			loop {
 				let fd = if !self.is_socket_forwarder {
-					palaver::accept(
+					palaver::socket::accept(
 						self.fd,
-						palaver::SockFlag::SOCK_CLOEXEC | palaver::SockFlag::SOCK_NONBLOCK,
+						palaver::socket::SockFlag::SOCK_CLOEXEC
+							| palaver::socket::SockFlag::SOCK_NONBLOCK,
 					)
 				} else {
 					SocketForwardee(self.fd).recv().and_then(|fd| {
-						match palaver::accept(
+						match palaver::socket::accept(
 							fd,
-							palaver::SockFlag::SOCK_CLOEXEC | palaver::SockFlag::SOCK_NONBLOCK,
+							palaver::socket::SockFlag::SOCK_CLOEXEC
+								| palaver::socket::SockFlag::SOCK_NONBLOCK,
 						) {
 							// alternative but doesn't work on mac: socket::getsockopt(fd, socket::sockopt::AcceptConn).unwrap()
 							Err(nix::Error::Sys(errno::Errno::EINVAL)) => Ok(fd),
@@ -214,10 +216,11 @@ impl Connecter {
 			assert!(count < 1_000);
 			match self.state {
 				None => {
-					let fd = palaver::socket(
+					let fd = palaver::socket::socket(
 						socket::AddressFamily::Inet,
 						socket::SockType::Stream,
-						palaver::SockFlag::SOCK_CLOEXEC | palaver::SockFlag::SOCK_NONBLOCK,
+						palaver::socket::SockFlag::SOCK_CLOEXEC
+							| palaver::socket::SockFlag::SOCK_NONBLOCK,
 						socket::SockProtocol::Tcp,
 					)
 					.unwrap();
@@ -275,7 +278,7 @@ impl Connecter {
 				Some(fd) => {
 					let x = socket::getsockopt(fd, socket::sockopt::SocketError).unwrap();
 					if x == 0 {
-						if palaver::is_connected(fd) {
+						if palaver::socket::is_connected(fd) {
 							trace!("Connecter connected {}", format_remote(self.remote));
 							let ret = match Connected::new(fd, executor, self.remote) {
 								ConnectedPoll::Connected(x) => ConnecterPoll::Connected(x),
@@ -342,7 +345,7 @@ impl Connectee {
 	pub fn poll(self, executor: &impl Notifier) -> ConnecteePoll {
 		let x = socket::getsockopt(self.fd, socket::sockopt::SocketError).unwrap();
 		if x == 0 {
-			if palaver::is_connected(self.fd) {
+			if palaver::socket::is_connected(self.fd) {
 				trace!("Connectee accepted {}", format_remote(self.remote));
 				let ret = match Connected::new(self.fd, executor, self.remote) {
 					ConnectedPoll::Connected(x) => ConnecteePoll::Connected(x),
@@ -421,7 +424,7 @@ impl ConnecterLocalClosed {
 				Some(fd) => {
 					let x = socket::getsockopt(fd, socket::sockopt::SocketError).unwrap();
 					if x == 0 {
-						if palaver::is_connected(fd) {
+						if palaver::socket::is_connected(fd) {
 							trace!(
 								"ConnecterLocalClosed connected {}",
 								format_remote(self.remote)
@@ -497,7 +500,7 @@ impl ConnecteeLocalClosed {
 	pub fn poll(self, executor: &impl Notifier) -> ConnecteeLocalClosedPoll {
 		let x = socket::getsockopt(self.fd, socket::sockopt::SocketError).unwrap();
 		if x == 0 {
-			if palaver::is_connected(self.fd) {
+			if palaver::socket::is_connected(self.fd) {
 				trace!(
 					"ConnecteeLocalClosed accepted {}",
 					format_remote(self.remote)
@@ -689,7 +692,7 @@ impl RemoteClosed {
 		.poll(executor)
 	}
 	pub fn poll(mut self, executor: &impl Notifier) -> RemoteClosedPoll {
-		assert_eq!(palaver::unreceived(self.fd), 0);
+		assert_eq!(palaver::socket::unreceived(self.fd), 0);
 		match self.send.as_mut().unwrap().read_to_fd(self.fd) {
 			Ok(_written) => RemoteClosedPoll::RemoteClosed(self),
 			Err(err) => {
@@ -895,7 +898,7 @@ impl Closing {
 		.poll(executor)
 	}
 	pub fn poll(mut self, executor: &impl Notifier) -> ClosingPoll {
-		assert_eq!(palaver::unreceived(self.fd), 0);
+		assert_eq!(palaver::socket::unreceived(self.fd), 0);
 		match self.send.as_mut().unwrap().read_to_fd(self.fd) {
 			Ok(_written) => (),
 			Err(err) => {
@@ -919,7 +922,7 @@ impl Closing {
 			}
 		}
 		if self.local_closed_given {
-			if palaver::unsent(self.fd) == 0 {
+			if palaver::socket::unsent(self.fd) == 0 {
 				trace!("Closing close {}", format_remote(self.remote));
 				executor.remove_fd(self.fd);
 				unistd::close(self.fd).unwrap();
