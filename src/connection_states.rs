@@ -1065,18 +1065,18 @@ mod sockstate {
 	impl TcpState {
 		fn from_raw(state: u8) -> Self {
 			match state {
-				0 => TcpState::CLOSED,
-				1 => TcpState::LISTEN,
-				2 => TcpState::SYN_SENT,
-				3 => TcpState::SYN_RECEIVED,
-				4 => TcpState::ESTABLISHED,
-				5 => TcpState::_CLOSE_WAIT,
-				6 => TcpState::FIN_WAIT_1,
-				7 => TcpState::CLOSING,
-				8 => TcpState::LAST_ACK,
-				9 => TcpState::FIN_WAIT_2,
-				10 => TcpState::TIME_WAIT,
-				11 => TcpState::RESERVED,
+				0 => Self::CLOSED,
+				1 => Self::LISTEN,
+				2 => Self::SYN_SENT,
+				3 => Self::SYN_RECEIVED,
+				4 => Self::ESTABLISHED,
+				5 => Self::_CLOSE_WAIT,
+				6 => Self::FIN_WAIT_1,
+				7 => Self::CLOSING,
+				8 => Self::LAST_ACK,
+				9 => Self::FIN_WAIT_2,
+				10 => Self::TIME_WAIT,
+				11 => Self::RESERVED,
 				_ => unreachable!(),
 			}
 		}
