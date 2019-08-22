@@ -24,6 +24,13 @@ impl SocketForwarder {
 		socket::sendmsg(self.0, &iov, &cmsg, socket::MsgFlags::empty(), None).map(|x| {
 			assert_eq!(x, 0);
 			if !copy {
+				// This is hilarious. Needed to stop the socket being left in a corrupted state whereby bytes increment tcpi_rxbytes but can't actually be read!
+				#[cfg(any(target_os = "macos", target_os = "ios"))]
+				let _ = std::thread::spawn(move || {
+					std::thread::sleep(std::time::Duration::from_millis(1000));
+					unistd::close(fd).unwrap();
+				});
+				#[cfg(not(any(target_os = "macos", target_os = "ios")))]
 				unistd::close(fd).unwrap();
 			}
 		})

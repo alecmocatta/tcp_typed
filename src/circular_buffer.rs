@@ -6,6 +6,8 @@ pub struct CircularBuffer<T> {
 	head: usize,
 	tail: usize,
 	buf: Vec<T>,
+	read: usize,
+	written: usize,
 }
 impl<T> CircularBuffer<T> {
 	pub fn new(cap: usize) -> Self {
@@ -15,6 +17,8 @@ impl<T> CircularBuffer<T> {
 			head: 0,
 			tail: 0,
 			buf,
+			read: 0,
+			written: 0,
 		}
 	}
 	#[inline(always)]
@@ -41,6 +45,7 @@ impl<T> CircularBuffer<T> {
 					self.head -= self.capacity();
 					self.tail -= self.capacity();
 				}
+				self.read += 1;
 				ret
 			})
 		} else {
@@ -55,6 +60,7 @@ impl<T> CircularBuffer<T> {
 				let off = self.head % self.capacity();
 				unsafe { ptr::write(self.buf.get_unchecked_mut(off), t) };
 				self.head += 1;
+				self.written += 1;
 			})
 		} else {
 			None
@@ -95,6 +101,7 @@ impl CircularBuffer<u8> {
 							self.head -= self.capacity();
 							self.tail -= self.capacity();
 						}
+						self.read += n;
 						written += n;
 					}
 					Err(err) => return Err(err),
@@ -135,6 +142,7 @@ impl CircularBuffer<u8> {
 					Ok(0) => return Ok((read, true)),
 					Ok(n) => {
 						self.head += n;
+						self.written += n;
 						read += n;
 					}
 					Err(err) => return Err(err),
@@ -159,10 +167,27 @@ impl CircularBuffer<u8> {
 		}
 	}
 }
-impl<T> fmt::Debug for CircularBuffer<T> {
+impl<T> fmt::Debug for CircularBuffer<T>
+where
+	for<'a> &'a T: fmt::Debug,
+{
 	fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-		fmt.debug_tuple("CircularBuffer")
-			.field(&format!("{}/{}", self.read_available(), self.capacity()))
+		fmt.debug_struct("CircularBuffer")
+			.field("written", &self.written)
+			.field("read", &self.read)
+			.field(
+				"contents",
+				&format!(
+					"{}/{} \"{:?}\"",
+					self.read_available(),
+					self.capacity(),
+					(0..self.read_available())
+						.map(|i| unsafe {
+							self.buf.get_unchecked((self.tail + i) % self.capacity())
+						})
+						.collect::<Vec<_>>()
+				),
+			)
 			.finish()
 	}
 }

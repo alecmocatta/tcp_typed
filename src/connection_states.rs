@@ -5,7 +5,6 @@ use log::trace;
 use nix::{errno, fcntl, libc, sys::socket, unistd};
 use std::{mem, net, time};
 
-#[derive(Debug)]
 pub struct Listener {
 	fd: Fd,
 	is_socket_forwarder: bool,
@@ -181,6 +180,15 @@ impl Drop for Listener {
 		panic!("Don't drop Listener");
 	}
 }
+impl fmt::Debug for Listener {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("Listener")
+			.field("fd", &self.fd)
+			.field("socket", &socketstat::socketstat(self.fd))
+			.field("is_socket_forwarder", &self.is_socket_forwarder)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -191,7 +199,6 @@ pub enum ConnecterPoll {
 	RemoteClosed(RemoteClosed),
 	Killed,
 }
-#[derive(Debug)]
 pub struct Connecter {
 	state: Option<Fd>,
 	local: net::SocketAddr,
@@ -323,6 +330,16 @@ impl Drop for Connecter {
 		panic!("Don't drop Connecter");
 	}
 }
+impl fmt::Debug for Connecter {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("Connecter")
+			.field("state", &self.state)
+			.field("socket", &self.state.map(socketstat::socketstat))
+			.field("local", &self.local)
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -333,7 +350,6 @@ pub enum ConnecteePoll {
 	RemoteClosed(RemoteClosed),
 	Killed,
 }
-#[derive(Debug)]
 pub struct Connectee {
 	fd: Fd,
 	remote: net::SocketAddr,
@@ -382,6 +398,15 @@ impl Drop for Connectee {
 		panic!("Don't drop Connectee");
 	}
 }
+impl fmt::Debug for Connectee {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("Connectee")
+			.field("fd", &self.fd)
+			.field("socket", &socketstat::socketstat(self.fd))
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -393,7 +418,6 @@ pub enum ConnecterLocalClosedPoll {
 	Closed,
 	Killed,
 }
-#[derive(Debug)]
 pub struct ConnecterLocalClosed {
 	state: Option<Fd>,
 	local: net::SocketAddr,
@@ -477,6 +501,16 @@ impl Drop for ConnecterLocalClosed {
 		panic!("Don't drop ConnecterLocalClosed");
 	}
 }
+impl fmt::Debug for ConnecterLocalClosed {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("ConnecterLocalClosed")
+			.field("state", &self.state)
+			.field("socket", &self.state.map(socketstat::socketstat))
+			.field("local", &self.local)
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -488,7 +522,6 @@ pub enum ConnecteeLocalClosedPoll {
 	Closed,
 	Killed,
 }
-#[derive(Debug)]
 pub struct ConnecteeLocalClosed {
 	fd: Fd,
 	remote: net::SocketAddr,
@@ -543,6 +576,15 @@ impl Drop for ConnecteeLocalClosed {
 		panic!("Don't drop ConnecteeLocalClosed");
 	}
 }
+impl fmt::Debug for ConnecteeLocalClosed {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("ConnecteeLocalClosed")
+			.field("fd", &self.fd)
+			.field("socket", &socketstat::socketstat(self.fd))
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -552,7 +594,6 @@ pub enum ConnectedPoll {
 	RemoteClosed(RemoteClosed),
 	Killed,
 }
-#[derive(Debug)]
 pub struct Connected {
 	fd: Fd,
 	send: Option<CircularBuffer<u8>>,
@@ -585,6 +626,8 @@ impl Connected {
 				Ok((_read, false)) => (),
 				Ok((_read, true)) => {
 					trace!("Connected got closed {}", format_remote(self.remote));
+					#[cfg(any(target_os = "macos", target_os = "ios"))]
+					assert_ne!(sockstate::sockstate(self.fd), sockstate::TcpState::ESTABLISHED, "this is a bug in macOS; see tcp_typed/src/socket_forwarder.rs for a mitigation");
 					self.remote_closed = true;
 				}
 				Err(err) => {
@@ -666,6 +709,18 @@ impl Drop for Connected {
 		panic!("Don't drop Connected");
 	}
 }
+impl fmt::Debug for Connected {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("Connected")
+			.field("fd", &self.fd)
+			.field("socket", &socketstat::socketstat(self.fd))
+			.field("send", &self.send)
+			.field("recv", &self.recv)
+			.field("remote_closed", &self.remote_closed)
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -674,7 +729,6 @@ pub enum RemoteClosedPoll {
 	RemoteClosed(RemoteClosed),
 	Killed,
 }
-#[derive(Debug)]
 pub struct RemoteClosed {
 	fd: Fd,
 	send: Option<CircularBuffer<u8>>,
@@ -740,6 +794,16 @@ impl Drop for RemoteClosed {
 		panic!("Don't drop RemoteClosed");
 	}
 }
+impl fmt::Debug for RemoteClosed {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("RemoteClosed")
+			.field("fd", &self.fd)
+			.field("socket", &socketstat::socketstat(self.fd))
+			.field("send", &self.send)
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -750,7 +814,6 @@ pub enum LocalClosedPoll {
 	Closed,
 	Killed,
 }
-#[derive(Debug)]
 pub struct LocalClosed {
 	fd: Fd,
 	send: Option<CircularBuffer<u8>>,
@@ -802,6 +865,8 @@ impl LocalClosed {
 				Ok((_read, false)) => (),
 				Ok((_read, true)) => {
 					trace!("LocalClosed got closed {}", format_remote(self.remote));
+					#[cfg(any(target_os = "macos", target_os = "ios"))]
+					assert_ne!(sockstate::sockstate(self.fd), sockstate::TcpState::ESTABLISHED, "this is a bug in macOS; see tcp_typed/src/socket_forwarder.rs for a mitigation");
 					self.remote_closed = true;
 				}
 				Err(err) => {
@@ -868,6 +933,19 @@ impl Drop for LocalClosed {
 		panic!("Don't drop LocalClosed");
 	}
 }
+impl fmt::Debug for LocalClosed {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("LocalClosed")
+			.field("fd", &self.fd)
+			.field("socket", &socketstat::socketstat(self.fd))
+			.field("send", &self.send)
+			.field("recv", &self.recv)
+			.field("remote_closed", &self.remote_closed)
+			.field("local_closed_given", &self.local_closed_given)
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -877,7 +955,6 @@ pub enum ClosingPoll {
 	Closed,
 	Killed,
 }
-#[derive(Debug)]
 pub struct Closing {
 	fd: Fd,
 	send: Option<CircularBuffer<u8>>,
@@ -946,5 +1023,117 @@ impl Closing {
 impl Drop for Closing {
 	fn drop(&mut self) {
 		panic!("Don't drop Closing");
+	}
+}
+impl fmt::Debug for Closing {
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt.debug_struct("Closing")
+			.field("fd", &self.fd)
+			.field("socket", &socketstat::socketstat(self.fd))
+			.field("send", &self.send)
+			.field("local_closed_given", &self.local_closed_given)
+			.field("remote", &self.remote)
+			.finish()
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+mod sockstate {
+	use nix::libc;
+	use std::convert::TryInto;
+
+	use super::Fd;
+
+	#[derive(PartialEq, Eq, Debug)]
+	#[allow(non_camel_case_types)]
+	pub enum TcpState {
+		CLOSED,       // 0: closed
+		LISTEN,       // 1: listening for connection
+		SYN_SENT,     // 2: active, have sent syn
+		SYN_RECEIVED, // 3: have send and received syn
+		ESTABLISHED,  // 4: established
+		_CLOSE_WAIT,  // 5: rcvd fin, waiting for close
+		FIN_WAIT_1,   // 6: have closed, sent fin
+		CLOSING,      // 7: closed xchd FIN; await FIN ACK
+		LAST_ACK,     // 8: had fin and close; await FIN ACK
+		FIN_WAIT_2,   // 9: have closed, fin is acked
+		TIME_WAIT,    // 10: in 2*msl quiet wait after close
+		RESERVED,     // 11: pseudo state: reserved
+	}
+	impl TcpState {
+		fn from_raw(state: u8) -> Self {
+			match state {
+				0 => Self::CLOSED,
+				1 => Self::LISTEN,
+				2 => Self::SYN_SENT,
+				3 => Self::SYN_RECEIVED,
+				4 => Self::ESTABLISHED,
+				5 => Self::_CLOSE_WAIT,
+				6 => Self::FIN_WAIT_1,
+				7 => Self::CLOSING,
+				8 => Self::LAST_ACK,
+				9 => Self::FIN_WAIT_2,
+				10 => Self::TIME_WAIT,
+				11 => Self::RESERVED,
+				_ => unreachable!(),
+			}
+		}
+	}
+
+	pub fn sockstate(fd: Fd) -> TcpState {
+		let mut info: tcp_connection_info = tcp_connection_info::default();
+		let mut len: libc::socklen_t = std::mem::size_of::<tcp_connection_info>()
+			.try_into()
+			.unwrap();
+		let res = unsafe {
+			libc::getsockopt(
+				fd,
+				libc::IPPROTO_TCP,
+				TCP_CONNECTION_INFO,
+				{
+					let info: *mut _ = &mut info;
+					info
+				} as *mut _,
+				&mut len,
+			)
+		};
+		let res = nix::errno::Errno::result(res).unwrap();
+		assert_eq!(res, 0);
+		TcpState::from_raw(info.tcpi_state)
+	}
+
+	// https://github.com/apple/darwin-xnu/blob/a449c6a3b8014d9406c2ddbdc81795da24aa7443/bsd/netinet/tcp.h
+
+	const TCP_CONNECTION_INFO: libc::c_int = 0x106; /* State of TCP connection */
+
+	#[derive(Copy, Clone, Default)]
+	#[repr(C)]
+	struct tcp_connection_info {
+		tcpi_state: u8,      /* connection state */
+		tcpi_snd_wscale: u8, /* Window scale for send window */
+		tcpi_rcv_wscale: u8, /* Window scale for receive window */
+		__pad1: u8,
+		tcpi_options: u32,      /* TCP options supported */
+		tcpi_flags: u32,        /* flags */
+		tcpi_rto: u32,          /* retransmit timeout in ms */
+		tcpi_maxseg: u32,       /* maximum segment size supported */
+		tcpi_snd_ssthresh: u32, /* slow start threshold in bytes */
+		tcpi_snd_cwnd: u32,     /* send congestion window in bytes */
+		tcpi_snd_wnd: u32,      /* send widnow in bytes */
+		tcpi_snd_sbbytes: u32,  /* bytes in send socket buffer, including in-flight data */
+		tcpi_rcv_wnd: u32,      /* receive window in bytes*/
+		tcpi_rttcur: u32,       /* most recent RTT in ms */
+		tcpi_srtt: u32,         /* average RTT in ms */
+		tcpi_rttvar: u32,       /* RTT variance */
+		tcpi_tfo: u32,
+		tcpi_txpackets: u64,
+		tcpi_txbytes: u64,
+		tcpi_txretransmitbytes: u64,
+		tcpi_rxpackets: u64,
+		tcpi_rxbytes: u64,
+		tcpi_rxoutoforderbytes: u64,
+		tcpi_txretransmitpackets: u64,
 	}
 }
