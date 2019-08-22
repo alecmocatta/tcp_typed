@@ -626,6 +626,8 @@ impl Connected {
 				Ok((_read, false)) => (),
 				Ok((_read, true)) => {
 					trace!("Connected got closed {}", format_remote(self.remote));
+					#[cfg(any(target_os = "macos", target_os = "ios"))]
+					assert_ne!(sockstate::sockstate(self.fd), sockstate::TcpState::ESTABLISHED, "this is a bug in macOS; see tcp_typed/src/socket_forwarder.rs for a mitigation");
 					self.remote_closed = true;
 				}
 				Err(err) => {
@@ -863,6 +865,8 @@ impl LocalClosed {
 				Ok((_read, false)) => (),
 				Ok((_read, true)) => {
 					trace!("LocalClosed got closed {}", format_remote(self.remote));
+					#[cfg(any(target_os = "macos", target_os = "ios"))]
+					assert_ne!(sockstate::sockstate(self.fd), sockstate::TcpState::ESTABLISHED, "this is a bug in macOS; see tcp_typed/src/socket_forwarder.rs for a mitigation");
 					self.remote_closed = true;
 				}
 				Err(err) => {
